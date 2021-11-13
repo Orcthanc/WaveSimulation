@@ -12,6 +12,6 @@ void main()
 	//outFragColor = vec4( fragCol, 1.0f );
 	//outFragColor = vec4( UV1UV2.xy, 0.0f, 1.0f );
 	//outFragColor = vec4( texture( tex1, UV1UV2.xy ).xyz, 1.0f );
-	outFragColor = vec4( fragNorm, 1.0f );
+	outFragColor = vec4( fragNorm * 0.5 + 0.5, 1.0f );
 }
 

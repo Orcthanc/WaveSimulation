@@ -219,7 +219,7 @@ void VkEngine::run(){
 				}
 				case SDL_MOUSEWHEEL:
 				{
-					cam.move_from_anchor({ 0.0f, e.wheel.y * dT * 100 });
+					cam.move_from_anchor({ 0.0f, e.wheel.y * dT * 10 });
 					break;
 				}
 			}
@@ -239,16 +239,16 @@ void VkEngine::run(){
 				rotate += 1 * dT;
 			}
 			if( state[SDL_SCANCODE_W] ){
-				move.x += 10 * dT;
+				move.x += 1 * dT;
 			}
 			if( state[SDL_SCANCODE_S] ){
-				move.x -= 10 * dT;
+				move.x -= 1 * dT;
 			}
 			if( state[SDL_SCANCODE_D] ){
-				move.z += 10 * dT;
+				move.z += 1 * dT;
 			}
 			if( state[SDL_SCANCODE_A] ){
-				move.z -= 10 * dT;
+				move.z -= 1 * dT;
 			}
 
 			cam.rotate_around_origin( rotate );
@@ -799,7 +799,7 @@ void VkEngine::draw_objects( VkCommandBuffer cmd, RenderableObject* first, int c
 
 	*/
 
-	if( grid.get_buffer_float_amount() * sizeof( float ) < get_curr_frame().grid_buf.allocation->GetSize()){
+	if( grid.get_buffer_float_amount() * sizeof( float ) > get_curr_frame().grid_buf.allocation->GetSize()){
 		std::cout << grid.get_buffer_float_amount() * sizeof( float ) << " mismatches " << get_curr_frame().grid_buf.allocation->GetSize() << std::endl;
 
 		vmaDestroyBuffer( vma_alloc, get_curr_frame().grid_buf.buffer, get_curr_frame().grid_buf.allocation );

@@ -36,7 +36,7 @@ size_t SimpleGrid::get_buffer_float_amount(){
 }
 
 void SimpleGrid::fill_buffer( float* buffer ){
-	constexpr float yscale = 0.1;
+	constexpr float yscale = 0.3;
 	const float xscale = 2.0 / x_s;
 	const float zscale = 2.0 / y_s;
 
@@ -50,8 +50,8 @@ void SimpleGrid::fill_buffer( float* buffer ){
 			float dx2 = (*this)[y + 1][x + 1] - (*this)[y + 1][x];
 			float dy2 = (*this)[y + 1][x + 1] - (*this)[y][x + 1];
 
-			glm::vec3 norm1 = glm::normalize( glm::vec3{ dx1, 1, dy1 });
-			glm::vec3 norm2 = glm::normalize( glm::vec3{ dx2, 1, dy2 });
+			glm::vec3 norm1 = -glm::normalize( glm::vec3{ dx1 / yscale, -1, dy1 / yscale });
+			glm::vec3 norm2 = -glm::normalize( glm::vec3{ dx2 / yscale, -1, dy2 / yscale });
 
 			// Vert 1
 			buffer[index++] = x * xscale - 1; //x
