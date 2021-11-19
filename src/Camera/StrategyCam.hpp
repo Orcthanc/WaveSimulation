@@ -14,13 +14,13 @@ struct StrategyCamera {
 		const glm::mat4 get_view() const;
 		const glm::mat4 get_proj() const;
 
-		float min_height{ 1 };
+		float min_height{ .2 };
 
 	private:
-		glm::vec3 origin;
+		glm::vec3 origin{};
 		float rotation{ 0 };
-		float height{ 20 };
-		float distance{ 20 };
+		float height{ 3 };
+		float distance{ 2 };
 
 		glm::mat4 proj;
 };

@@ -21,5 +21,6 @@ layout( push_constant ) uniform constants
 void main()
 {
 	gl_Position = cam_data.view_proj * PushConstants.model * vec4( vPos, 1.0f );
-	fragNorm = ( inverse( transpose ( cam_data.view_proj * PushConstants.model )) * vec4( vNorm, 0.0f )).xyz;
+	fragNorm = normalize(( transpose( inverse ( cam_data.view * PushConstants.model )) * vec4( vNorm, 0.0f )).xyz);
+	//fragNorm = vNorm;
 }
