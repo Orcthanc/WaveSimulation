@@ -169,6 +169,8 @@ struct VkEngine {
 
 		void load_grid();
 
+		void update( double dT );
+
 	public:
 		//Vulkan helpers
 		bool vk_load_shader( const char* path, VkShaderModule* shader );

@@ -28,6 +28,9 @@ void SimpleGrid::init( const char* start_condition ){
 	for( size_t i = 0; i < x_s * y_s; ++i )
 		values[i] = data[i] / 255.0;
 
+	oval = values; //Copy
+	nval.resize( values.size() );
+
 	stbi_image_free( data );
 }
 
@@ -170,4 +173,7 @@ void SimpleGrid::step_finite_difference( double dt ){
 				oval[IDX(x, y)];
 		}
 	}
+
+	std::swap( oval, values );
+	std::swap( values, nval );
 }

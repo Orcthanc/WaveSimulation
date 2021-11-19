@@ -18,8 +18,8 @@ struct StrategyCamera {
 
 	private:
 		glm::vec3 origin{};
-		float rotation{ 0 };
-		float height{ 3 };
+		float rotation{ -0.7 };
+		float height{ 2 };
 		float distance{ 2 };
 
 		glm::mat4 proj;

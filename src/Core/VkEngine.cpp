@@ -30,6 +30,7 @@
 #include <ios>
 #include <stdexcept>
 #include <iostream>
+#include <chrono>
 #include <vulkan/vulkan_core.h>
 
 #include "VkBootstrap.h"
@@ -205,9 +206,17 @@ void VkEngine::run(){
 	SDL_Event e;
 	bool quit = false;
 
-	float dT = 0.013;
 
 	while( !quit ){
+
+		static auto last_time = std::chrono::high_resolution_clock::now();
+		auto curr_time = std::chrono::high_resolution_clock::now();
+
+		double dT = std::chrono::duration_cast<std::chrono::microseconds>( curr_time - last_time ).count() * 0.000001;
+
+		std::cout << dT << std::endl;
+
+		last_time = std::move( curr_time );
 		while( SDL_PollEvent( &e )){
 			if( e.type == SDL_QUIT )
 				quit = true;
@@ -254,6 +263,8 @@ void VkEngine::run(){
 			cam.rotate_around_origin( rotate );
 			cam.move_anchor( move );
 		}
+
+		update( dT );
 
 		draw();
 	}
@@ -799,7 +810,6 @@ void VkEngine::draw_objects( VkCommandBuffer cmd, RenderableObject* first, int c
 
 	*/
 
-	grid.step_finite_difference( 0.1 );
 
 	if( grid.get_buffer_float_amount() * sizeof( float ) > get_curr_frame().grid_buf.allocation->GetSize()){
 		std::cout << grid.get_buffer_float_amount() * sizeof( float ) << " mismatches " << get_curr_frame().grid_buf.allocation->GetSize() << std::endl;
@@ -1081,4 +1091,11 @@ void VkEngine::load_grid(){
 		}
 		std::cout << std::endl;
 	}
+}
+
+void VkEngine::update( double dT ){
+	constexpr size_t step_amount = 5;
+	
+	for( size_t i = 0; i < step_amount; ++i )
+		grid.step_finite_difference( 0.009 );
 }

@@ -20,7 +20,7 @@ namespace WaveSimulation {
 		size_t x_s{ 2 };
 		size_t y_s{ 2 };
 
-		double c{ 1 };
+		double c{ 10 };
 
 		std::vector<double> oval;   //t - dt
 		std::vector<double> values; //t
