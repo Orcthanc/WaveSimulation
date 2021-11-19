@@ -136,3 +136,38 @@ VertexInputDescription SimpleGrid::get_vk_description(){
 
 	return desc;
 }
+
+void SimpleGrid::set_wave_speed( double c ){
+	this->c = c;
+}
+
+void SimpleGrid::update_ghosts( void (*func)( double&, size_t, size_t )){
+	for( size_t x = 0; x < x_s; ++x ){
+		func( (*this)[0][x], x, 0 );
+		func( (*this)[y_s - 1][x], x, y_s - 1 );
+	}
+
+	for( size_t y = 1; y < y_s - 1; ++y ){
+		func( (*this)[y][0], y, 0 );
+		func( (*this)[y][x_s - 1], y, x_s - 1 );
+	}
+}
+
+void SimpleGrid::step_finite_difference( double dt ){
+	double C2 = c * c * dt * dt;
+
+	for( size_t x = 0; x < x_s; ++x ){
+		for( size_t y = 0; y < y_s; ++y ){
+			size_t xn = x ? x - 1 : 0;
+			size_t yn = y ? y - 1 : 0;
+			size_t xp = x != x_s - 1 ? x + 1 : x;
+			size_t yp = y != y_s - 1 ? y + 1 : y;
+
+#define IDX( x, y ) ((y) * x_s + (x))
+			nval[IDX( x, y )] = 2 * values[IDX( x, y)] + C2 *
+				( values[IDX(xp, y)] - 2 * values[IDX(x, y)] + values[IDX(xn, y)] +
+				  values[IDX(x, yp)] - 2 * values[IDX(x, y)] + values[IDX(x, yn)] ) -
+				oval[IDX(x, y)];
+		}
+	}
+}

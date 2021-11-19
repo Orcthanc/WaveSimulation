@@ -799,6 +799,8 @@ void VkEngine::draw_objects( VkCommandBuffer cmd, RenderableObject* first, int c
 
 	*/
 
+	grid.step_finite_difference( 0.1 );
+
 	if( grid.get_buffer_float_amount() * sizeof( float ) < get_curr_frame().grid_buf.allocation->GetSize()){
 		std::cout << grid.get_buffer_float_amount() * sizeof( float ) << " mismatches " << get_curr_frame().grid_buf.allocation->GetSize() << std::endl;
 
