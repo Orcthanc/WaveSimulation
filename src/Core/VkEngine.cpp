@@ -233,7 +233,7 @@ void VkEngine::run(){
 				}
 			}
 		}
-		
+
 		// Keys
 		{
 			const Uint8* state = SDL_GetKeyboardState( nullptr );
@@ -1084,18 +1084,20 @@ void VkEngine::load_images(){
 
 void VkEngine::load_grid(){
 	grid.init( FILE_PREFIX "assets/riemann.bmp" );
-
+/*
 	for( size_t y = 0; y < grid.y_s; ++y ){
 		for( size_t x = 0; x < grid.x_s; ++x ){
 			std::cout << grid[y][x] << " ";
 		}
 		std::cout << std::endl;
 	}
+	*/
 }
 
 void VkEngine::update( double dT ){
-	constexpr size_t step_amount = 5;
-	
+	constexpr size_t step_amount = 1;
+
 	for( size_t i = 0; i < step_amount; ++i )
-		grid.step_finite_difference( 0.009 );
+		//grid.step_finite_difference( 0.009 );
+		grid.step_finite_volume( 0.003 );
 }
