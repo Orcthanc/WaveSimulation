@@ -9,7 +9,7 @@ namespace WaveSimulation {
 	struct SimpleGrid {
 		void init( const char* start_condition = nullptr );
 		size_t get_buffer_float_amount();
-		void fill_buffer( float* buffer );
+		void fill_buffer( float* buffer, bool drawU );
 		
 		void update_ghosts( void(*)( std::pair<double, double>& cell, size_t x, size_t y ));
 
@@ -24,7 +24,7 @@ namespace WaveSimulation {
 		size_t y_s{ 2 };
 
 		double K0{ 10 };
-		double onebyrho0{ 1 };
+		double onebyrho0{ 10 };
 
 		//std::vector<double> oval;   //t - dt
 		std::vector<std::pair<double, double>> values; //t

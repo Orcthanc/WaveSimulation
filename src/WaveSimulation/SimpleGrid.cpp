@@ -39,7 +39,7 @@ size_t SimpleGrid::get_buffer_float_amount(){
 	return (x_s - 1) * (y_s - 1) * 36;
 }
 
-void SimpleGrid::fill_buffer( float* buffer ){
+void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 	constexpr float yscale = 0.3;
 	const float xscale = 2.0 / x_s;
 	const float zscale = 2.0 / y_s;
@@ -48,18 +48,27 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 	for( size_t y = 0; y < y_s - 1; ++y ){
 		for( size_t x = 0; x < x_s - 1; ++x ){
-			float dx1 = (*this)[y][x + 1].first - (*this)[y][x].first;
-			float dy1 = (*this)[y + 1][x].first - (*this)[y][x].first;
+			float dx1, dy1, dx2, dy2;
+			if (drawU) {
+				dx1 = (*this)[y][x + 1].second - (*this)[y][x].second;
+				dy1 = (*this)[y + 1][x].second - (*this)[y][x].second;
 
-			float dx2 = (*this)[y + 1][x + 1].first - (*this)[y + 1][x].first;
-			float dy2 = (*this)[y + 1][x + 1].first - (*this)[y][x + 1].first;
+				dx2 = (*this)[y + 1][x + 1].second - (*this)[y + 1][x].second;
+				dy2 = (*this)[y + 1][x + 1].second - (*this)[y][x + 1].second;
+			}else {
+				dx1 = (*this)[y][x + 1].first - (*this)[y][x].first;
+				dy1 = (*this)[y + 1][x].first - (*this)[y][x].first;
+
+				dx2 = (*this)[y + 1][x + 1].first - (*this)[y + 1][x].first;
+				dy2 = (*this)[y + 1][x + 1].first - (*this)[y][x + 1].first;
+			}
 
 			glm::vec3 norm1 = -glm::normalize( glm::vec3{ dx1 / yscale, -1, dy1 / yscale });
 			glm::vec3 norm2 = -glm::normalize( glm::vec3{ dx2 / yscale, -1, dy2 / yscale });
 
 			// Vert 1
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (*this)[y][x].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x].first) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -68,7 +77,7 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 			// Vert 2
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (*this)[y][x + 1].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x + 1].first) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -77,7 +86,7 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 			// Vert 3
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (*this)[y + 1][x].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x].first) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -86,7 +95,7 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 			// Vert 4
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (*this)[y][x + 1].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x + 1].first) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -95,7 +104,7 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 			// Vert 5
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (*this)[y + 1][x].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x].first) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -104,7 +113,7 @@ void SimpleGrid::fill_buffer( float* buffer ){
 
 			// Vert 6
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (*this)[y + 1][x + 1].first * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x + 1].first) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -182,6 +191,8 @@ void SimpleGrid::step_finite_difference( double dt ){
 }
 
 void SimpleGrid::step_finite_volume( double dt ){
+	double distance = std::sqrt(K0 * onebyrho0) * dt;
+
 	for( size_t x = 0; x < x_s; ++x ){
 		for( size_t y = 0; y < y_s; ++y ){
 			size_t xn = x ? x - 1 : 0;
@@ -199,26 +210,60 @@ void SimpleGrid::step_finite_volume( double dt ){
 			*/
 
 			nval[IDX( x, y )] = values[IDX(x, y)];
+
+			/*
 			//x-1
 			auto temp = solveRiemann( x, y, xn, y, dt );
-			nval[IDX( x, y )].first -= temp.first * dt;
-			nval[IDX( x, y )].second -= temp.second * dt;
-			//x-1
+			nval[IDX( x, y )].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
+			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
+			//x+1
 			temp = solveRiemann( x, y, xp, y, dt );
-			nval[IDX( x, y )].first -= temp.first * dt;
-			nval[IDX( x, y )].second -= temp.second * dt;
+			if (x == 127 && y == 127) {
+				std::cout << values[IDX(x, y)].first << " " << (1 - distance) << " " << temp.first << " " << distance << std::endl;
+				std::cout << values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance << std::endl;
+			}
+			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
+			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
 			//y-1
 			temp = solveRiemann( x, y, x, yn, dt );
-			nval[IDX( x, y )].first -= temp.first * dt;
-			nval[IDX( x, y )].second -= temp.second * dt;
+			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
+			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
 			//y-1
 			temp = solveRiemann( x, y, x, yp, dt );
-			nval[IDX( x, y )].first -= temp.first * dt;
-			nval[IDX( x, y )].second -= temp.second * dt;
+			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
+			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
+			*/
+
+			//x-1
+			auto temp = solveRiemann(x, y, xn, y, dt);
+			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
+			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
+			//x+1
+			temp = solveRiemann(x, y, xp, y, dt);
+			if (x == 127 && y == 127) {
+				std::cout << values[IDX(x, y)].first << " " << (1 - distance) << " " << temp.first << " " << distance << std::endl;
+				std::cout << temp.first / dt << std::endl;
+			}
+			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
+			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
+			//y-1
+			temp = solveRiemann(x, y, x, yn, dt);
+			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
+			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
+			//y-1
+			temp = solveRiemann(x, y, x, yp, dt);
+			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
+			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
+
 		}
 	}
 
 	std::swap( values, nval );
+
+
+	auto temp = solveRiemann(1, 1, 2, 1, dt);
+
+	std::cout << temp.first << " " << temp.second << std::endl;
 
 }
 
@@ -249,6 +294,10 @@ std::pair<double, double> SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t
 
 	double qmp = values[IDX(xl, yl)].first + alpha1 * -Z0;
 	double qmv = values[IDX(xl, yl)].second + alpha1 * 1;
+
+	if (xl == 1 && yl == 1 && xr == 1 && yr == 2) {
+		std::cout << c << " " << Z0 << " " << dQp << " " << dQv << " " << alpha1 << " " << qmp << " " << qmv << std::endl;
+	}
 
 	return { qmp, qmv };
 }

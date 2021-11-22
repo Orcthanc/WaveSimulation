@@ -231,6 +231,14 @@ void VkEngine::run(){
 					cam.move_from_anchor({ 0.0f, e.wheel.y * dT * 10 });
 					break;
 				}
+				case SDL_KEYDOWN:
+				{
+					if ( e.key.keysym.scancode == SDL_SCANCODE_F1 ) {
+						drawU = !drawU;
+					} else if (e.key.keysym.scancode == SDL_SCANCODE_F2) {
+						doUpdate = !doUpdate;
+					}
+				}
 			}
 		}
 
@@ -264,7 +272,8 @@ void VkEngine::run(){
 			cam.move_anchor( move );
 		}
 
-		update( dT );
+		if(doUpdate)
+			update( dT );
 
 		draw();
 	}
@@ -829,7 +838,7 @@ void VkEngine::draw_objects( VkCommandBuffer cmd, RenderableObject* first, int c
 	vkCmdPushConstants( cmd, get_material( "default" )->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof( PushConstants ), &consts );
 
 	vmaMapMemory( vma_alloc, get_curr_frame().grid_buf.allocation, &data );
-	grid.fill_buffer( reinterpret_cast<float*>( data ));
+	grid.fill_buffer( reinterpret_cast<float*>( data ), drawU );
 	vmaUnmapMemory( vma_alloc, get_curr_frame().grid_buf.allocation );
 
 	VkDeviceSize off = 0;

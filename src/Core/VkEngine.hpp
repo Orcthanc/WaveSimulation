@@ -146,6 +146,8 @@ struct VkEngine {
 
 		//Simulation
 		WaveSimulation::SimpleGrid grid;
+		bool drawU = false;
+		bool doUpdate = true;
 
 	private:
 		//Init
