@@ -1,11 +1,13 @@
 #include "SimpleGrid.hpp"
 
 #include "stb_image.h"
+#include <glm/ext/matrix_float3x3.hpp>
 #include <glm/geometric.hpp>
 #include <iostream>
 #include <string.h>
 
 #include <glm/vec3.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <utility>
 #include <vulkan/vulkan_core.h>
 
@@ -27,7 +29,7 @@ void SimpleGrid::init( const char* start_condition ){
 	values.resize( x_s * y_s );
 
 	for( size_t i = 0; i < x_s * y_s; ++i )
-		values[i] = std::make_pair<double, double>( data[i] / 255.0, 0 );
+		values[i] = glm::vec3( data[i] / 255.0, 0, 0 );
 
 	//oval = values; //Copy
 	nval.resize( values.size() );
@@ -50,17 +52,17 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 		for( size_t x = 0; x < x_s - 1; ++x ){
 			float dx1, dy1, dx2, dy2;
 			if (drawU) {
-				dx1 = (*this)[y][x + 1].second - (*this)[y][x].second;
-				dy1 = (*this)[y + 1][x].second - (*this)[y][x].second;
+				dx1 = (*this)[y][x + 1].y - (*this)[y][x].y;
+				dy1 = (*this)[y + 1][x].y - (*this)[y][x].y;
 
-				dx2 = (*this)[y + 1][x + 1].second - (*this)[y + 1][x].second;
-				dy2 = (*this)[y + 1][x + 1].second - (*this)[y][x + 1].second;
+				dx2 = (*this)[y + 1][x + 1].y - (*this)[y + 1][x].y;
+				dy2 = (*this)[y + 1][x + 1].y - (*this)[y][x + 1].y;
 			}else {
-				dx1 = (*this)[y][x + 1].first - (*this)[y][x].first;
-				dy1 = (*this)[y + 1][x].first - (*this)[y][x].first;
+				dx1 = (*this)[y][x + 1].x - (*this)[y][x].x;
+				dy1 = (*this)[y + 1][x].x - (*this)[y][x].x;
 
-				dx2 = (*this)[y + 1][x + 1].first - (*this)[y + 1][x].first;
-				dy2 = (*this)[y + 1][x + 1].first - (*this)[y][x + 1].first;
+				dx2 = (*this)[y + 1][x + 1].x - (*this)[y + 1][x].x;
+				dy2 = (*this)[y + 1][x + 1].x - (*this)[y][x + 1].x;
 			}
 
 			glm::vec3 norm1 = -glm::normalize( glm::vec3{ dx1 / yscale, -1, dy1 / yscale });
@@ -68,7 +70,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 1
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y][x].x) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -77,7 +79,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 2
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x + 1].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y][x + 1].x) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -86,7 +88,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 3
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y + 1][x].x) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -95,7 +97,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 4
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y][x + 1].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y][x + 1].x) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -104,7 +106,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 5
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y + 1][x].x) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -113,7 +115,7 @@ void SimpleGrid::fill_buffer( float* buffer, bool drawU ){
 
 			// Vert 6
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].second : (*this)[y + 1][x + 1].first) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].y : (*this)[y + 1][x + 1].x) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -150,7 +152,7 @@ VertexInputDescription SimpleGrid::get_vk_description(){
 	return desc;
 }
 
-void SimpleGrid::update_ghosts( void (*func)( std::pair<double, double>&, size_t, size_t )){
+void SimpleGrid::update_ghosts( void (*func)( glm::vec3&, size_t, size_t )){
 	for( size_t x = 0; x < x_s; ++x ){
 		func( (*this)[0][x], x, 0 );
 		func( (*this)[y_s - 1][x], x, y_s - 1 );
@@ -171,27 +173,22 @@ void SimpleGrid::step_finite_difference( double dt ){
 			size_t yp = y != y_s - 1 ? y + 1 : y;
 
 #define IDX( x, y ) ((y) * x_s + (x))
-#if 0
-			nval[IDX( x, y )] = 2 * values[IDX( x, y)] + C2 *
-				( values[IDX(xp, y)] - 2 * values[IDX(x, y)] + values[IDX(xn, y)] +
-				  values[IDX(x, yp)] - 2 * values[IDX(x, y)] + values[IDX(x, yn)] ) -
-				oval[IDX(x, y)];
-#endif
-			nval[IDX( x, y )] = std::make_pair<double, double>(
-					values[IDX( x, y )].first - K0 * ( values[IDX(xp, y)].second - values[IDX(xn, y)].second +
-						values[IDX( x,yp)].second - values[IDX( x,yn)].second ) * 0.5 * dt,
-					values[IDX( x, y )].second - onebyrho0 * ( values[IDX(xp, y)].first - values[IDX(xn, y)].first +
-						values[IDX( x,yp)].first - values[IDX( x,yn)].first ) * 0.5 * dt
+			//TODO 2d velocity
+			nval[IDX( x, y )] = glm::vec3(
+					values[IDX( x, y )].x - K0 * ( values[IDX(xp, y)].y - values[IDX(xn, y)].y +
+						values[IDX( x,yp)].y - values[IDX( x,yn)].y ) * 0.5 * dt,
+					values[IDX( x, y )].y - onebyrho0 * ( values[IDX(xp, y)].x - values[IDX(xn, y)].x +
+						values[IDX( x,yp)].x - values[IDX( x,yn)].x ) * 0.5 * dt,
+					0
 				);
 		}
 	}
 
-	//std::swap( oval, values );
 	std::swap( values, nval );
 }
 
 void SimpleGrid::step_finite_volume( double dt ){
-	double distance = std::sqrt(K0 * onebyrho0) * dt;
+	float distance = std::sqrt(K0 * onebyrho0) * dt * 10;
 
 	for( size_t x = 0; x < x_s; ++x ){
 		for( size_t y = 0; y < y_s; ++y ){
@@ -200,60 +197,20 @@ void SimpleGrid::step_finite_volume( double dt ){
 			size_t xp = x != x_s - 1 ? x + 1 : x;
 			size_t yp = y != y_s - 1 ? y + 1 : y;
 
-			/*
-			nval[IDX( x, y )] = std::make_pair<double, double>(
-					values[IDX( x, y )].first - K0 * ( values[IDX(xp, y)].second - values[IDX(xn, y)].second +
-						values[IDX( x,yp)].second - values[IDX( x,yn)].second ) * 0.5 * dt,
-					values[IDX( x, y )].second - onebyrho0 * ( values[IDX(xp, y)].first - values[IDX(xn, y)].first +
-						values[IDX( x,yp)].first - values[IDX( x,yn)].first ) * 0.5 * dt
-				);
-			*/
-
 			nval[IDX( x, y )] = values[IDX(x, y)];
 
-			/*
 			//x-1
-			auto temp = solveRiemann( x, y, xn, y, dt );
-			nval[IDX( x, y )].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
-			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
+			auto temp = solveRiemann(x, y, xn, y, dt, glm::vec2( -1, 0 ));
+			nval[IDX(x, y)] += temp * distance;
 			//x+1
-			temp = solveRiemann( x, y, xp, y, dt );
-			if (x == 127 && y == 127) {
-				std::cout << values[IDX(x, y)].first << " " << (1 - distance) << " " << temp.first << " " << distance << std::endl;
-				std::cout << values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance << std::endl;
-			}
-			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
-			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
+			temp = solveRiemann(x, y, xp, y, dt, glm::vec2( 1, 0 ));
+			nval[IDX(x, y)] += temp * distance;
 			//y-1
-			temp = solveRiemann( x, y, x, yn, dt );
-			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
-			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
+			temp = solveRiemann(x, y, x, yn, dt, glm::vec2( 0, -1 ));
+			nval[IDX(x, y)] += temp * distance;
 			//y-1
-			temp = solveRiemann( x, y, x, yp, dt );
-			nval[IDX(x, y)].first -= values[IDX(x, y)].first - values[IDX(x, y)].first * (1 - distance) - temp.first * distance;
-			nval[IDX(x, y)].second -= values[IDX(x, y)].second - values[IDX(x, y)].second * (1 - distance) - temp.second * distance;
-			*/
-
-			//x-1
-			auto temp = solveRiemann(x, y, xn, y, dt);
-			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
-			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
-			//x+1
-			temp = solveRiemann(x, y, xp, y, dt);
-			if (x == 127 && y == 127) {
-				std::cout << values[IDX(x, y)].first << " " << (1 - distance) << " " << temp.first << " " << distance << std::endl;
-				std::cout << temp.first / dt << std::endl;
-			}
-			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
-			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
-			//y-1
-			temp = solveRiemann(x, y, x, yn, dt);
-			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
-			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
-			//y-1
-			temp = solveRiemann(x, y, x, yp, dt);
-			nval[IDX(x, y)].first -= (values[IDX(x, y)].first - temp.first) * 0.5;
-			nval[IDX(x, y)].second -= (values[IDX(x, y)].second - temp.second) * 0.5;
+			temp = solveRiemann(x, y, x, yp, dt, glm::vec2( 0, 1 ));
+			nval[IDX(x, y)] += temp * distance;
 
 		}
 	}
@@ -261,43 +218,61 @@ void SimpleGrid::step_finite_volume( double dt ){
 	std::swap( values, nval );
 
 
-	auto temp = solveRiemann(1, 1, 2, 1, dt);
-
-	std::cout << temp.first << " " << temp.second << std::endl;
 
 }
 
-std::pair<double, double> SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t xr, size_t yr, double dT ){
-	/*
-	double lambda_min = -std::sqrt( K0 * onebyrho0 );
-	double lambda_max = std::sqrt( K0 * onebyrho0 );
+glm::vec3 SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t xr, size_t yr, double dT, glm::vec2 normal ){
 
-	//double q_min_l = 1 / ( lambda_max - lambda_min ) * (lambda_max / (onebyrho0) * (*this)[yl][xl].second - (*this)[yl][xl].first );
-	double q_max_l = 1 / ( lambda_min - lambda_max ) * (lambda_min / (onebyrho0) * (*this)[yl][xl].second - (*this)[yl][xl].first );
-
-	double q_min_r = 1 / ( lambda_max - lambda_min ) * (lambda_max / (onebyrho0) * (*this)[yr][xr].second - (*this)[yr][xr].first );
-	//double q_max_r = 1 / ( lambda_min - lambda_max ) * (lambda_min / (onebyrho0) * (*this)[yr][xr].second - (*this)[yr][xr].first );
-
-	return std::make_pair<double, double>(
-			(( lambda_min * q_min_r * lambda_min ) + ( lambda_max * q_max_l * lambda_max )),
-			(( lambda_min * q_min_r * onebyrho0 ) + ( lambda_max * q_max_l * onebyrho0 ))
-			);
-	*/
-
-	double c = std::sqrt( K0 * onebyrho0 );
+	float c = std::sqrt( K0 * onebyrho0 );
+/*
 	double Z0 = c / onebyrho0;
 
-	double dQp = values[IDX( xr, yr )].first - values[IDX( xl, yl )].first;
-	double dQv = values[IDX( xr, yr )].second - values[IDX( xl, yl )].second;
+	double dQp = values[IDX( xr, yr )].x - values[IDX( xl, yl )].x;
+	double dQv;
+
+	if( normal.x ){
+		dQv = values[IDX( xr, yr )].y - values[IDX( xl, yl )].y;
+	} else {
+		dQv = values[IDX( xr, yr )].z - values[IDX( xl, yl )].z;
+	}
 
 	double alpha1 = (-dQp + dQv * Z0 ) / ( 2 * Z0 );
 
-	double qmp = values[IDX(xl, yl)].first + alpha1 * -Z0;
-	double qmv = values[IDX(xl, yl)].second + alpha1 * 1;
+	double qmp = values[IDX(xl, yl)].x + alpha1 * -Z0;
+	double qmv = values[IDX(xl, yl)].y + alpha1 * 1;
 
 	if (xl == 1 && yl == 1 && xr == 1 && yr == 2) {
 		std::cout << c << " " << Z0 << " " << dQp << " " << dQv << " " << alpha1 << " " << qmp << " " << qmv << std::endl;
 	}
 
-	return { qmp, qmv };
+	return { qmp, qmv * normal.x, qmv * normal.y };
+
+*/
+	glm::mat3 F =
+		glm::mat3( 
+			0, K0, 0, 
+			onebyrho0, 0, 0, 
+			0, 0, 0 ) * normal.x +
+		glm::mat3(
+			0, 0, K0,
+			0, 0, 0,
+			onebyrho0, 0, 0 ) * normal.y;
+
+	glm::vec3 Fm = F * values[IDX( xl, yl )];
+	glm::vec3 Fp = F * values[IDX( xr, yr )];
+
+#if 0
+	if (xl == 127 && yl == 127 && xr == 128 && yr == 127) {
+		std::cout << "\t" << glm::to_string( Fm ) << " " << glm::to_string( Fp ) << std::endl;
+	}
+#endif
+
+	auto upwind = -0.5f * c * ( values[IDX( xl, yl )] - values[IDX( xr, yr )]);
+
+	if( normal.x == 0.0f )
+		upwind.y = 0;
+	else
+		upwind.z = 0;
+
+	return 0.5f * ( Fm + Fp ) + upwind;
 }
