@@ -8,6 +8,7 @@ set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 add_executable( ${PROJECT_NAME}
 	Camera/StrategyCam.cpp
 	WaveSimulation/SimpleGrid.cpp
+	WaveSimulation/Riemann2Grid.cpp
 	Core/VkEngine.cpp
 	Core/VkInit.cpp
 	Core/VkMesh.cpp

@@ -216,38 +216,12 @@ void SimpleGrid::step_finite_volume( double dt ){
 	}
 
 	std::swap( values, nval );
-
-
-
 }
 
 glm::vec3 SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t xr, size_t yr, double dT, glm::vec2 normal ){
 
 	float c = std::sqrt( K0 * onebyrho0 );
-/*
-	double Z0 = c / onebyrho0;
 
-	double dQp = values[IDX( xr, yr )].x - values[IDX( xl, yl )].x;
-	double dQv;
-
-	if( normal.x ){
-		dQv = values[IDX( xr, yr )].y - values[IDX( xl, yl )].y;
-	} else {
-		dQv = values[IDX( xr, yr )].z - values[IDX( xl, yl )].z;
-	}
-
-	double alpha1 = (-dQp + dQv * Z0 ) / ( 2 * Z0 );
-
-	double qmp = values[IDX(xl, yl)].x + alpha1 * -Z0;
-	double qmv = values[IDX(xl, yl)].y + alpha1 * 1;
-
-	if (xl == 1 && yl == 1 && xr == 1 && yr == 2) {
-		std::cout << c << " " << Z0 << " " << dQp << " " << dQv << " " << alpha1 << " " << qmp << " " << qmv << std::endl;
-	}
-
-	return { qmp, qmv * normal.x, qmv * normal.y };
-
-*/
 	glm::mat3 F =
 		glm::mat3( 
 			0, K0, 0, 
@@ -260,12 +234,6 @@ glm::vec3 SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t xr, size_t yr, 
 
 	glm::vec3 Fm = F * values[IDX( xl, yl )];
 	glm::vec3 Fp = F * values[IDX( xr, yr )];
-
-#if 0
-	if (xl == 127 && yl == 127 && xr == 128 && yr == 127) {
-		std::cout << "\t" << glm::to_string( Fm ) << " " << glm::to_string( Fp ) << std::endl;
-	}
-#endif
 
 	auto upwind = -0.5f * c * ( values[IDX( xl, yl )] - values[IDX( xr, yr )]);
 

@@ -145,7 +145,7 @@ struct VkEngine {
 		VkDescriptorPool desc_pool;
 
 		//Simulation
-		WaveSimulation::SimpleGrid grid;
+		WaveSimulation::Riemann2Grid grid;
 		bool drawU = false;
 		bool doUpdate = true;
 
