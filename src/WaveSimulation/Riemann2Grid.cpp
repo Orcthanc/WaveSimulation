@@ -207,6 +207,20 @@ static T interp1(T w1, T w2) {
 	return ((1-gauss_legendre[0]) / (gauss_legendre[1] - gauss_legendre[0]) * w2) + ((1-gauss_legendre[1]) / (gauss_legendre[0] - gauss_legendre[1]) * w1);
 }
 
+template<typename T>
+static T gaussbase0(T w1, float coord) {
+	float gauss_legendre[2] = { -0.5 / std::sqrt(3) + 0.5, 0.5 / std::sqrt(3) + 0.5 };
+
+	return ((coord-gauss_legendre[1]) / (gauss_legendre[0] - gauss_legendre[1]) * w1);
+}
+
+template<typename T>
+static T gaussbase1(T w1, float coord) {
+	float gauss_legendre[2] = { -0.5 / std::sqrt(3) + 0.5, 0.5 / std::sqrt(3) + 0.5 };
+
+	return ((coord-gauss_legendre[0]) / (gauss_legendre[1] - gauss_legendre[0]) * w1);
+}
+
 void Riemann2Grid::step_finite_volume(double dt) {
 	float distance = std::sqrt(K0 * onebyrho0) * dt * 10;
 
@@ -253,9 +267,9 @@ void Riemann2Grid::step_finite_volume(double dt) {
 
 			glm::mat4 M_inv_ux = M_inv_p, M_inv_uy = M_inv_p;
 
-
-
-			glm::vec3 face_int{ 0, 0, 0 };
+			glm::vec4 face_int_p(0);
+			glm::vec4 face_int_ux(0);
+			glm::vec4 face_int_uy(0);
 			glm::vec3 temp;
 
 			//x-1
@@ -268,11 +282,16 @@ void Riemann2Grid::step_finite_volume(double dt) {
 					interp1(glm::vec3(other.p.z, other.ux.z, other.uy.z), glm::vec3(other.p.w, other.ux.w, other.uy.w))) * 0.5f;
 
 				temp = solveRiemann(curr_cell, other_cell, dt, glm::vec2(-1, 0));
+				face_int_p += glm::vec4{ gaussbase0(temp, 0).x, gaussbase1(temp, 0).x, gaussbase0(temp, 0).x, gaussbase1(temp, 0).x };
+				face_int_ux += glm::vec4{ gaussbase0(temp, 0).y, gaussbase1(temp, 0).y, gaussbase0(temp, 0).y, gaussbase1(temp, 0).y };
+				face_int_uy += glm::vec4{ gaussbase0(temp, 0).z, gaussbase1(temp, 0).z, gaussbase0(temp, 0).z, gaussbase1(temp, 0).z };
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(-1, 0));
+				face_int_p += glm::vec4(temp.x);
+				face_int_ux += glm::vec4(temp.y);
+				face_int_uy += glm::vec4(temp.z);
 			}
-			face_int += temp * distance;
 
 			//x+1
 			curr_cell = (interp1(glm::vec3(curr.p.x, curr.ux.x, curr.uy.x), glm::vec3(curr.p.y, curr.ux.y, curr.uy.y)) +
@@ -284,11 +303,16 @@ void Riemann2Grid::step_finite_volume(double dt) {
 					interp0(glm::vec3(other.p.z, other.ux.z, other.uy.z), glm::vec3(other.p.w, other.ux.w, other.uy.w))) * 0.5f;
 
 				temp = solveRiemann(curr_cell, other_cell, dt, glm::vec2(1, 0));
+				face_int_p += glm::vec4{ gaussbase0(temp, 1).x, gaussbase1(temp, 1).x, gaussbase0(temp, 1).x, gaussbase1(temp, 1).x };
+				face_int_ux += glm::vec4{ gaussbase0(temp, 1).y, gaussbase1(temp, 1).y, gaussbase0(temp, 1).y, gaussbase1(temp, 1).y };
+				face_int_uy += glm::vec4{ gaussbase0(temp, 1).z, gaussbase1(temp, 1).z, gaussbase0(temp, 1).z, gaussbase1(temp, 1).z };
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(1, 0));
+				face_int_p += glm::vec4(temp.x);
+				face_int_ux += glm::vec4(temp.y);
+				face_int_uy += glm::vec4(temp.z);
 			}
-			face_int += temp * distance;
 			//y-1
 			curr_cell = (interp0(glm::vec3(curr.p.x, curr.ux.x, curr.uy.x), glm::vec3(curr.p.z, curr.ux.z, curr.uy.z)) +
 				interp0(glm::vec3(curr.p.y, curr.ux.y, curr.uy.y), glm::vec3(curr.p.w, curr.ux.w, curr.uy.w))) * 0.5f;
@@ -299,11 +323,16 @@ void Riemann2Grid::step_finite_volume(double dt) {
 					interp1(glm::vec3(curr.p.y, curr.ux.y, curr.uy.y), glm::vec3(curr.p.w, curr.ux.w, curr.uy.w))) * 0.5f;
 
 				temp = solveRiemann(curr_cell, other_cell, dt, glm::vec2(0, -1));
+				face_int_p += glm::vec4{ gaussbase0(temp, 0).x, gaussbase0(temp, 0).x, gaussbase1(temp, 0).x, gaussbase1(temp, 0).x };
+				face_int_ux += glm::vec4{ gaussbase0(temp, 0).y, gaussbase0(temp, 0).y, gaussbase1(temp, 0).y, gaussbase1(temp, 0).y };
+				face_int_uy += glm::vec4{ gaussbase0(temp, 0).z, gaussbase0(temp, 0).z, gaussbase1(temp, 0).z, gaussbase1(temp, 0).z };
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(0, -1));
+				face_int_p += glm::vec4(temp.x);
+				face_int_ux += glm::vec4(temp.y);
+				face_int_uy += glm::vec4(temp.z);
 			}
-			face_int += temp * distance;
 			//y+1
 			curr_cell = (interp1(glm::vec3(curr.p.x, curr.ux.x, curr.uy.x), glm::vec3(curr.p.z, curr.ux.z, curr.uy.z)) +
 				interp1(glm::vec3(curr.p.y, curr.ux.y, curr.uy.y), glm::vec3(curr.p.w, curr.ux.w, curr.uy.w))) * 0.5f;
@@ -314,18 +343,24 @@ void Riemann2Grid::step_finite_volume(double dt) {
 					interp0(glm::vec3(curr.p.y, curr.ux.y, curr.uy.y), glm::vec3(curr.p.w, curr.ux.w, curr.uy.w))) * 0.5f;
 
 				temp = solveRiemann(curr_cell, other_cell, dt, glm::vec2(0, 1));
+				face_int_p += glm::vec4{ gaussbase0(temp, 1).x, gaussbase0(temp, 1).x, gaussbase1(temp, 1).x, gaussbase1(temp, 1).x };
+				face_int_ux += glm::vec4{ gaussbase0(temp, 1).y, gaussbase0(temp, 1).y, gaussbase1(temp, 1).y, gaussbase1(temp, 1).y };
+				face_int_uy += glm::vec4{ gaussbase0(temp, 1).z, gaussbase0(temp, 1).z, gaussbase1(temp, 1).z, gaussbase1(temp, 1).z };
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(0, 1));
+				face_int_p += glm::vec4(temp.x);
+				face_int_ux += glm::vec4(temp.y);
+				face_int_uy += glm::vec4(temp.z);
 			}
-			face_int += temp * distance;
 
-			//face_int = { 0, 0, 0 };
+			face_int_p *= 0.5 * distance;
+			face_int_ux *= 0.5 * distance;
+			face_int_uy *= 0.5 * distance;
 
-			nval[IDX(x, y)].p += M_inv_p * glm::vec4(face_int.x);
-			nval[IDX(x, y)].ux += M_inv_ux * glm::vec4(face_int.y);
-			nval[IDX(x, y)].uy += M_inv_uy * glm::vec4(face_int.z);
-			auto asdf = nval[IDX(x, y)];
+			nval[IDX(x, y)].p += M_inv_p * face_int_p;
+			nval[IDX(x, y)].ux += M_inv_ux * face_int_ux;
+			nval[IDX(x, y)].uy += M_inv_uy * face_int_uy;
 		}
 	}
 
