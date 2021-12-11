@@ -55,18 +55,18 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 		for (size_t x = 0; x < x_s - 1; ++x) {
 			float dx1, dy1, dx2, dy2;
 			if (drawU) {
-				dx1 = (*this)[y][x + 1].ux.x - (*this)[y][x].ux.x;
-				dy1 = (*this)[y + 1][x].ux.x - (*this)[y][x].ux.x;
+				dx1 = (*this)[y][x].ux.y - (*this)[y][x].ux.x;
+				dy1 = (*this)[y][x].ux.z - (*this)[y][x].ux.x;
 
-				dx2 = (*this)[y + 1][x + 1].ux.x - (*this)[y + 1][x].ux.x;
-				dy2 = (*this)[y + 1][x + 1].ux.x - (*this)[y][x + 1].ux.x;
+				dx2 = (*this)[y][x].ux.w - (*this)[y][x].ux.z;
+				dy2 = (*this)[y][x].ux.w - (*this)[y][x].ux.y;
 			}
 			else {
-				dx1 = (*this)[y][x + 1].p.x - (*this)[y][x].p.x;
-				dy1 = (*this)[y + 1][x].p.x - (*this)[y][x].p.x;
+				dx1 = (*this)[y][x].p.y - (*this)[y][x].p.x;
+				dy1 = (*this)[y][x].p.z - (*this)[y][x].p.x;
 
-				dx2 = (*this)[y + 1][x + 1].p.x - (*this)[y + 1][x].p.x;
-				dy2 = (*this)[y + 1][x + 1].p.x - (*this)[y][x + 1].p.x;
+				dx2 = (*this)[y][x].p.w - (*this)[y][x].p.z;
+				dy2 = (*this)[y][x].p.w - (*this)[y][x].p.y;
 			}
 
 			glm::vec3 norm1 = -glm::normalize(glm::vec3{ dx1 / yscale, -1, dy1 / yscale });
@@ -83,7 +83,7 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 
 			// Vert 2
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].ux.x : (*this)[y][x + 1].p.x) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].ux.y : (*this)[y][x].p.y) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -92,7 +92,7 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 
 			// Vert 3
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (drawU ? (*this)[y][x].ux.x : (*this)[y + 1][x].p.x) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].ux.z : (*this)[y][x].p.z) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm1.x; //x-normal
@@ -101,7 +101,7 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 
 			// Vert 4
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].ux.x : (*this)[y][x + 1].p.x) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].ux.y : (*this)[y][x].p.y) * yscale; //y
 			buffer[index++] = y * zscale - 1; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -110,7 +110,7 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 
 			// Vert 5
 			buffer[index++] = x * xscale - 1; //x
-			buffer[index++] = (drawU ? (*this)[y][x].ux.x : (*this)[y + 1][x].p.x) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].ux.z : (*this)[y][x].p.z) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -119,7 +119,7 @@ void Riemann2Grid::fill_buffer(float* buffer, bool drawU) {
 
 			// Vert 6
 			buffer[index++] = x * xscale - 1 + xscale; //x
-			buffer[index++] = (drawU ? (*this)[y][x].ux.x : (*this)[y + 1][x + 1].p.x) * yscale; //y
+			buffer[index++] = (drawU ? (*this)[y][x].ux.w : (*this)[y][x].p.w) * yscale; //y
 			buffer[index++] = y * zscale - 1 + zscale; //z
 
 			buffer[index++] = norm2.x; //x-normal
@@ -265,6 +265,8 @@ void Riemann2Grid::step_finite_volume(double dt) {
 				0, 0, 0, 1
 			};
 
+			M_inv_p *= 0.5f;
+
 			glm::mat4 M_inv_ux = M_inv_p, M_inv_uy = M_inv_p;
 
 			glm::vec4 face_int_p(0);
@@ -288,9 +290,6 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(-1, 0));
-				face_int_p += glm::vec4(temp.x);
-				face_int_ux += glm::vec4(temp.y);
-				face_int_uy += glm::vec4(temp.z);
 			}
 
 			//x+1
@@ -309,9 +308,6 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(1, 0));
-				face_int_p += glm::vec4(temp.x);
-				face_int_ux += glm::vec4(temp.y);
-				face_int_uy += glm::vec4(temp.z);
 			}
 			//y-1
 			curr_cell = (interp0(glm::vec3(curr.p.x, curr.ux.x, curr.uy.x), glm::vec3(curr.p.z, curr.ux.z, curr.uy.z)) +
@@ -329,9 +325,6 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(0, -1));
-				face_int_p += glm::vec4(temp.x);
-				face_int_ux += glm::vec4(temp.y);
-				face_int_uy += glm::vec4(temp.z);
 			}
 			//y+1
 			curr_cell = (interp1(glm::vec3(curr.p.x, curr.ux.x, curr.uy.x), glm::vec3(curr.p.z, curr.ux.z, curr.uy.z)) +
@@ -349,18 +342,55 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			}
 			else {
 				temp = solveRiemann(curr_cell, curr_cell, dt, glm::vec2(0, 1));
-				face_int_p += glm::vec4(temp.x);
-				face_int_ux += glm::vec4(temp.y);
-				face_int_uy += glm::vec4(temp.z);
 			}
 
-			face_int_p *= 0.5 * distance;
-			face_int_ux *= 0.5 * distance;
-			face_int_uy *= 0.5 * distance;
+			face_int_p *= 0.2;
+			face_int_ux *= 0.2;
+			face_int_uy *= 0.2;
 
-			nval[IDX(x, y)].p += M_inv_p * face_int_p;
-			nval[IDX(x, y)].ux += M_inv_ux * face_int_ux;
-			nval[IDX(x, y)].uy += M_inv_uy * face_int_uy;
+			float wdev = 1.732050807568877 / 4;
+			//wdev = -1.0 / 32.0;
+			//vol int
+			glm::mat4 dev_mat(
+				-wdev, wdev, 0, 0,
+				wdev, -wdev, 0, 0,
+				0, 0, -wdev, wdev,
+				0, 0, wdev, -wdev);
+
+			glm::mat3 F =
+				glm::mat3(
+					0, -K0, 0,
+					onebyrho0, 0, 0,
+					0, 0, 0);
+				//+ glm::mat3(
+					//0, 0, K0,
+					//0, 0, 0,
+					//onebyrho0, 0, 0);
+
+			glm::vec3 f1 = F * glm::vec3(curr.p.x, curr.ux.x, curr.uy.x);
+			glm::vec3 f2 = F * glm::vec3(curr.p.y, curr.ux.y, curr.uy.y);
+			glm::vec3 f3 = F * glm::vec3(curr.p.z, curr.ux.z, curr.uy.z);
+			glm::vec3 f4 = F * glm::vec3(curr.p.w, curr.ux.w, curr.uy.w);
+			/*
+			if (x == 50 && y == 50) {
+				std::cout << glm::to_string(f1) << " " << glm::to_string(f2) << " " << glm::to_string(f3) << " " << glm::to_string(f4) << std::endl;
+				std::cout << glm::to_string(face_int_p) << " " << glm::to_string(face_int_ux) << std::endl;
+			}
+			*/
+
+			glm::vec4 vol_int_p = dev_mat * glm::vec4(f1.x, f2.x, f3.x, f4.x);
+			glm::vec4 vol_int_ux = dev_mat * glm::vec4(f1.y, f2.y, f3.y, f4.y);
+			glm::vec4 vol_int_uy = dev_mat * glm::vec4(f1.z, f2.z, f3.z, f4.z);
+
+			nval[IDX(x, y)].p += M_inv_p * (face_int_p
+				+ vol_int_p
+				) * distance;
+			nval[IDX(x, y)].ux += M_inv_ux * (face_int_ux
+				+ vol_int_ux
+				) * distance;
+			nval[IDX(x, y)].uy += M_inv_uy * (face_int_uy
+				+ vol_int_uy
+				) * distance;
 		}
 	}
 
