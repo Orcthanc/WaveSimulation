@@ -62,7 +62,7 @@ namespace WaveSimulation {
 		size_t x_s{ 2 };
 		size_t y_s{ 2 };
 
-		double K0{ 10 };
+		double K0{ 1 };
 		double onebyrho0{ 1 };
 
 		std::vector<Riemann2Cell> values; //t

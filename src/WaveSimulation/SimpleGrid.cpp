@@ -235,6 +235,9 @@ glm::vec3 SimpleGrid::solveRiemann( size_t xl, size_t yl, size_t xr, size_t yr, 
 	glm::vec3 Fm = F * values[IDX( xl, yl )];
 	glm::vec3 Fp = F * values[IDX( xr, yr )];
 
+	Fm.y *= -1;
+	Fm.z *= -1;
+
 	auto upwind = -0.5f * c * ( values[IDX( xl, yl )] - values[IDX( xr, yr )]);
 
 	if( normal.x == 0.0f )

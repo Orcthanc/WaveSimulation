@@ -1104,9 +1104,11 @@ void VkEngine::load_grid(){
 }
 
 void VkEngine::update( double dT ){
-	constexpr size_t step_amount = 10;
+	constexpr size_t step_amount = 100;
 
 	for( size_t i = 0; i < step_amount; ++i )
 		//grid.step_finite_difference( 0.009 );
 		grid.step_finite_volume( 0.003 );
+
+	//doUpdate = false;
 }
