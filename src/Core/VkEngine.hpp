@@ -147,7 +147,7 @@ struct VkEngine {
 		//Simulation
 		WaveSimulation::Riemann2Grid grid;
 		bool drawU = false;
-		bool doUpdate = true;
+		bool doUpdate = false;
 
 	private:
 		//Init

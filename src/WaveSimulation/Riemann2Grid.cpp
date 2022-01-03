@@ -321,7 +321,7 @@ void Riemann2Grid::step_finite_volume(double dt) {
 				face_int_uy += glm::vec4{ gaussbase0(temp, 1).z, gaussbase0(temp, 1).z, gaussbase1(temp, 1).z, gaussbase1(temp, 1).z };
 			}
 
-			constexpr double face_fac = 0.5;
+			constexpr double face_fac = 2;
 
 			face_int_p *= face_fac;
 			face_int_ux *= face_fac;
@@ -337,7 +337,7 @@ void Riemann2Grid::step_finite_volume(double dt) {
 
 			glm::mat3 F =
 				glm::mat3(
-					0, -K0, 0,
+					0, K0, 0,
 					onebyrho0, 0, 0,
 					0, 0, 0);
 
@@ -357,6 +357,7 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			vol_int_ux.w *= -1;
 			*/
 
+			/*
 			auto delp = dev_mat * curr.p;
 			auto delux = dev_mat * curr.ux;
 			auto deluy = dev_mat * curr.uy;
@@ -367,7 +368,7 @@ void Riemann2Grid::step_finite_volume(double dt) {
 				deluy.x + deluy.z
 			};
 
-			inte *= 0.25;
+			inte *= 0.5;
 
 			inte = F * inte;
 
@@ -375,9 +376,28 @@ void Riemann2Grid::step_finite_volume(double dt) {
 			glm::vec4 vol_int_ux{};
 			glm::vec4 vol_int_uy{};
 
-			vol_int_p += glm::vec4{ -inte.x, inte.x, -inte.x, inte.x };
-			vol_int_ux += glm::vec4{ -inte.y, inte.y, -inte.y, inte.y };
-			vol_int_uy += glm::vec4{ -inte.z, inte.z, -inte.z, inte.z };
+			vol_int_p += glm::vec4{ inte.x, inte.x, inte.x, inte.x };
+			vol_int_ux += glm::vec4{ inte.y, inte.y, inte.y, inte.y };
+			vol_int_uy += glm::vec4{ inte.z, inte.z, inte.z, inte.z };
+			*/
+
+			glm::vec3 left_int{( curr.p.x + curr.p.z ), ( curr.ux.x + curr.ux.z ), ( curr.uy.x + curr.uy.z ) };
+			glm::vec3 right_int{( curr.p.y + curr.p.w ), ( curr.ux.y + curr.ux.w ), ( curr.uy.y + curr.uy.w ) };
+
+			//left_int *= 0.5f;
+			//right_int *= 0.5f;
+
+			auto Fm = F * left_int;
+			auto Fp = F * right_int;
+
+			Fp.y *= -1;
+			Fp.z *= -1;
+
+			auto res = -1.0f * wdev * ( Fm + Fp );
+
+			glm::vec4 vol_int_p{ -res.x, res.x, -res.x, res.x };
+			glm::vec4 vol_int_ux{ res.y, res.y, res.y, res.y };
+			glm::vec4 vol_int_uy{ res.z, res.z, res.z, res.z };
 
 			nval[IDX(x, y)].p += (M_inv_p * (
 				face_int_p
