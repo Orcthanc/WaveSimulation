@@ -23,15 +23,24 @@ void SimpleGrid::init( const char* start_condition ){
 		return;
 	}
 
-	x_s = width;
-	y_s = height;
+	int res = 4;
+
+	x_s = width / res;
+	y_s = height / res;
 
 	values.resize( x_s * y_s );
 
+	/*
 	for( size_t i = 0; i < x_s * y_s; ++i )
 		values[i] = glm::vec3( data[i] / 255.0, 0, 0 );
+	*/
 
-	//oval = values; //Copy
+	for(size_t iy = 0; iy < y_s; ++iy){
+		for( size_t ix = 0; ix < x_s; ++ix){
+			values[iy * x_s + ix] = glm::vec3(data[iy * res * x_s * res + ix * res] / 255.0f, 0, 0);
+		}
+	}
+
 	nval.resize( values.size() );
 
 	stbi_image_free( data );
@@ -199,18 +208,28 @@ void SimpleGrid::step_finite_volume( double dt ){
 
 			nval[IDX( x, y )] = values[IDX(x, y)];
 
+			glm::vec3 temp;
+
 			//x-1
-			auto temp = solveRiemann(x, y, xn, y, dt, glm::vec2( -1, 0 ));
-			nval[IDX(x, y)] += temp * distance;
+			if( xn != x ){
+				temp = solveRiemann(x, y, xn, y, dt, glm::vec2( -1, 0 ));
+				nval[IDX(x, y)] += temp * distance;
+			}
 			//x+1
-			temp = solveRiemann(x, y, xp, y, dt, glm::vec2( 1, 0 ));
-			nval[IDX(x, y)] += temp * distance;
+			if( xp != x ){
+				temp = solveRiemann(x, y, xp, y, dt, glm::vec2( 1, 0 ));
+				nval[IDX(x, y)] += temp * distance;
+			}
 			//y-1
-			temp = solveRiemann(x, y, x, yn, dt, glm::vec2( 0, -1 ));
-			nval[IDX(x, y)] += temp * distance;
-			//y-1
-			temp = solveRiemann(x, y, x, yp, dt, glm::vec2( 0, 1 ));
-			nval[IDX(x, y)] += temp * distance;
+			if( yn != y ){
+				temp = solveRiemann(x, y, x, yn, dt, glm::vec2( 0, -1 ));
+				nval[IDX(x, y)] += temp * distance;
+			}
+			//y+1
+			if( yp != y ){
+				temp = solveRiemann(x, y, x, yp, dt, glm::vec2( 0, 1 ));
+				nval[IDX(x, y)] += temp * distance;
+			}
 
 		}
 	}

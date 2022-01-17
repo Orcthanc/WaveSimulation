@@ -25,7 +25,7 @@ namespace WaveSimulation {
 		size_t x_s{ 2 };
 		size_t y_s{ 2 };
 
-		double K0{ 10 };
+		double K0{ 0.25 };
 		double onebyrho0{ 1 };
 
 		//std::vector<double> oval;   //t - dt

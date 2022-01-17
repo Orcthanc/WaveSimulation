@@ -1092,7 +1092,7 @@ void VkEngine::load_images(){
 }
 
 void VkEngine::load_grid(){
-	grid.init( FILE_PREFIX "assets/riemann.bmp" );
+	grid.init( FILE_PREFIX "assets/riemann3.bmp" );
 /*
 	for( size_t y = 0; y < grid.y_s; ++y ){
 		for( size_t x = 0; x < grid.x_s; ++x ){
